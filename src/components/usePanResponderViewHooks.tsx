@@ -180,7 +180,36 @@ export default ({
             })
           }
         },
-        onPanResponderTerminate: (_evt, _gestureState) => {},
+        onPanResponderTerminate: (_evt, gestureState) => {
+          const toIndex = Math.min(Math.max(0, toIndexRef.current), itemLength - 1)
+          onPressRelease(toIndex)
+          if (shouldAnimOnRelease === true) {
+            const { dx, dy } = gestureState
+
+            const distinationX = ((toIndex % numColumns) - (index % numColumns)) * itemWidth
+            const distinationY =
+              (Math.floor(toIndex / numColumns) - Math.floor(index / numColumns)) * itemHeight
+            const duration = Math.min(
+              animMoveDuration,
+              Math.sqrt(Math.pow(distinationX - dx, 2) + Math.pow(distinationY - dy, 2)) *
+                durationMultiplier
+            )
+            Animated.parallel([
+              Animated.timing(dragXAnimRef.current, {
+                toValue: distinationX * multiplierRTL,
+                duration,
+                useNativeDriver: true
+              }),
+              Animated.timing(dragYAnimRef.current, {
+                toValue: distinationY,
+                duration,
+                useNativeDriver: true
+              })
+            ]).start(() => {
+              endAnim()
+            })
+          }
+        },
         onShouldBlockNativeResponder: (_evt, _gestureState) => {
           return true
         }
